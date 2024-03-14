@@ -71,7 +71,9 @@ while True:
         place = Place.create_place()
         transition = Transition.create_transition()
         arc = Arc.create_arc() 
-        break
+        create_more = input("Do you want to create more places and transitions? (yes/no): ")
+        if create_more.lower() != "yes":
+            break
     except ValueError as e:
         print(e)
 
