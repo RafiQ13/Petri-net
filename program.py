@@ -1,83 +1,88 @@
-class Arc:
-    def __init__(self, source, target, weight):
-        if type(source) != type(target):
-            self.source = source
-            self.target = target
-            self.weight = weight
-        else:  
-            raise ValueError("Arcs must connect objects of different types.")
-    # Function to create an Arc with error handling
-    def create_arc():
-        while True:
-            try:
-                source_name = input("Enter the name of the source: ")
-                if source_name != place.name and source_name != transition.name:
-                    raise ValueError("Source name does not exist. Please enter an existing place or transition name.")
-                
-                target_name = input("Enter the name of the target: ")
-                if target_name != place.name and target_name != transition.name:
-                    raise ValueError("Target name does not exist. Please enter an existing place or transition name.")
-                
-                weight = int(input("Enter the weight of the arc: "))
-                
-                # Create source and target objects based on user input
-                source = place if source_name == place.name else transition
-                target = place if target_name == place.name else transition
-                
-                return Arc(source, target, weight)
-            except ValueError as e:
-                print(e)
+from pnet import PetriNet, Place, Transition, Arc
 
-class Place:
-    def __init__(self, name, tokens=0):
-        self.name = name
-        self.tokens = tokens
-
-    def add_tokens(self, num_tokens):
-        self.tokens += num_tokens
-
-    def remove_tokens(self, num_tokens):
-        if self.tokens >= num_tokens:
-            self.tokens -= num_tokens
-        else:
-            print("Error: Not enough tokens in the place.")
-    # Function to create a Place with error handling
+# Function to create a Petri net with user input for places, transitions, and arcs
+def create_petri_net():
+    # Create a new Petri net
+    net = PetriNet("My Petri Net")
+    
+    # Lists to store created places and transitions
+    places = []
+    transitions = []
+    
+    # Function to create a place with user input
     def create_place():
         while True:
             try:
                 name = input("Enter the name of the place: ")
                 initial_tokens = int(input("Enter the initial number of tokens for the place: "))
-                return Place(name, initial_tokens)
+                place = Place(name, initial_tokens)
+                places.append(place)
+                net.add_place(place)
+                return place
             except ValueError:
                 print("Invalid input. Please enter a valid number for initial tokens.")
-
-class Transition:
-    def __init__(self, name):
-        self.name = name
-
-
-    # Function to create a Transition with error handling
+    
+    # Function to create a transition with user input
     def create_transition():
         while True:
-            name = input("Enter the name of the transition: ")
-            return Transition(name)
+            try:
+                name = input("Enter the name of the transition: ")
+                transition = Transition(name)
+                transitions.append(transition)
+                net.add_transition(transition)
+                return transition
+            except ValueError:
+                print("Invalid input. Please enter a valid name for the transition.")
+    
+    # Function to create an arc with user input
+    def create_arc():
+        while True:
+            try:
+                source_name = input("Enter the name of the source (place or transition): ")
+                target_name = input("Enter the name of the target (place or transition): ")
+                weight = int(input("Enter the weight of the arc: "))
+                
+                # Find the source and target objects based on user input
+                source = next((place for place in places if place.name == source_name), None)
+                target = next((place for place in places if place.name == target_name), None)
+                
+                if source is None and target is None:
+                    raise ValueError("Source and target names do not exist. Please enter existing place or transition names.")
+                elif source is None:
+                    raise ValueError("Source name does not exist. Please enter an existing place or transition name.")
+                elif target is None:
+                    raise ValueError("Target name does not exist. Please enter an existing place or transition name.")
+                
+                # If both source and target are places, or both are transitions, raise an error
+                if (isinstance(source, Place) and isinstance(target, Place)) or (isinstance(source, Transition) and isinstance(target, Transition)):
+                    raise ValueError("Arcs must connect objects of different types.")
+                
+                # Create and add the arc to the Petri net
+                arc = Arc(source, target, weight)
+                net.add_arc(arc)
+                return arc
+            except ValueError as e:
+                print(e)
+    
+    # Create objects with user input and error handling
+    while True:
+        try:
+            place = create_place()
+            transition = create_transition()
+            arc = create_arc()
+            create_more = input("Do you want to create more places and transitions? (yes/no): ")
+            if create_more.lower() != "yes":
+                break
+        except ValueError as e:
+            print(e)
+    
+    return net
 
-
-
-
-# Create objects with error handling
-while True:
-    try:
-        place = Place.create_place()
-        transition = Transition.create_transition()
-        arc = Arc.create_arc() 
-        create_more = input("Do you want to create more places and transitions? (yes/no): ")
-        if create_more.lower() != "yes":
-            break
-    except ValueError as e:
-        print(e)
+# Create a Petri net
+net = create_petri_net()
 
 # Output
-print("Place created:", place.name)
-print("Transition created:", transition.name)
-print("Arc created from", arc.source.name, "to", arc.target.name, "with weight", arc.weight)
+print("Petri net created with the following components:")
+print("Places:", [place.name for place in net.places])
+print("Transitions:", [transition.name for transition in net.transitions])
+print("Arcs:", [(arc.source.name, arc.target.name, arc.weight) for arc in net.arcs])
